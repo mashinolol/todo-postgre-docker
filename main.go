@@ -10,7 +10,7 @@ import (
 
 type Product struct {
 	Name      string
-	Price     int
+	Price     float64
 	Available bool
 }
 
@@ -32,26 +32,49 @@ func main() {
 
 	createProductTable(db)
 
-	product := Product{"Book", 15, true}
+	// product := Product{"Book", 15, true}
 
-	pk := insertProduct(db, product)
+	// pk := insertProduct(db, product)
+
+	// var name string
+	// var available bool
+	// var price float64
+
+	// query := "SELECT name, available, price FROM product WHERE id = $1"
+	// err = db.QueryRow(query, pk).Scan(&name, &available, &price)
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		log.Fatalf("No row found with id %d", 111)
+	// 	}
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Printf("Name: %s\n", name)
+	// fmt.Printf("Name: %t\n", available)
+	// fmt.Printf("Name: %f\n", price)
+
+	data := []Product{}
+
+	rows, err := db.Query("SELECT name, available, price FROM product")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer rows.Close()
 
 	var name string
 	var available bool
 	var price float64
 
-	query := "SELECT name, available, price FROM product WHERE id = $1"
-	err = db.QueryRow(query, pk).Scan(&name, &available, &price)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Fatalf("No row found with id %d", 111)
+	for rows.Next() {
+		err := rows.Scan(&name, &available, &price)
+		if err != nil {
+			log.Fatal(err)
 		}
-		log.Fatal(err)
+		data = append(data, Product{Name: name, Available: available, Price: price})
 	}
 
-	fmt.Printf("Name: %s\n", name)
-	fmt.Printf("Name: %t\n", available)
-	fmt.Printf("Name: %f\n", price)
+	fmt.Println(data)
 }
 
 func createProductTable(db *sql.DB) {
